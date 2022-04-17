@@ -243,12 +243,12 @@ if __name__ == '__main__':
             time.sleep(0.1)
             for index, task in enumerate(thread_progress.tasks):
                 # Task not done yet
-                if shared_array[num_processes * index + 2] == 0:
-                    task.completed = shared_array[num_processes * index]
+                if shared_array[3 * index + 2] == 0:
+                    task.completed = shared_array[3 * index]
                 else:
-                    shared_array[num_processes * index + 2] = 0
-                    shared_array[num_processes * index] = 0
-                    if shared_array[num_processes * index + 1] == 1:
+                    shared_array[3 * index + 2] = 0
+                    shared_array[3 * index] = 0
+                    if shared_array[3 * index + 1] == 1:
                         # splitting description i.e. Thread i: <hash>
                         hash = task.description.split(" ")[2]
                         console.log(f"WINNER, WINNER CHICKEN DINNER: {hash}")
