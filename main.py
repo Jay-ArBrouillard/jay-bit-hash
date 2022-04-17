@@ -139,7 +139,7 @@ def get_latest_hash_from_site(LATEST_TERMINATING_HASH):
 #     return GAMES_LEFT
 
 
-def calculate_hash(terminating_hash_list, MAX_ITERATIONS, random_hash, index_in_array, num_processes, shared_array):
+def calculate_hash(terminating_hash_list, MAX_ITERATIONS, random_hash, index_in_array, shared_array):
     m = hashlib.sha256()
     m.update(str.encode(random_hash))
     hex_digest = m.hexdigest()
@@ -147,17 +147,17 @@ def calculate_hash(terminating_hash_list, MAX_ITERATIONS, random_hash, index_in_
     # Each Process will use 3 sequential elements in shared_array
     # Index 0 = iteration, Index 1 = found winning hash, Index 2 = loop has completed
 
-    shared_array[num_processes * index_in_array + 1] = 0
-    shared_array[num_processes * index_in_array + 2] = 0
+    shared_array[3 * index_in_array + 1] = 0
+    shared_array[3 * index_in_array + 2] = 0
     for iteration in range(MAX_ITERATIONS + 1):
-        shared_array[num_processes * index_in_array] = iteration
+        shared_array[3 * index_in_array] = iteration
         m = hashlib.sha256()
         m.update(str.encode(hex_digest))
         hex_digest = m.hexdigest()
         if hex_digest in terminating_hash_list:
-            shared_array[num_processes * index_in_array + 1] = 1
+            shared_array[3 * index_in_array + 1] = 1
             break
-    shared_array[num_processes * index_in_array + 2] = 1
+    shared_array[3 * index_in_array + 2] = 1
 
 
 def populate_terminating_hashes(LATEST_TERMINATING_HASH, list_size: int):
@@ -206,7 +206,6 @@ if __name__ == '__main__':
     # temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS)
 
     cpu_count = os.cpu_count()
-    num_processes = cpu_count-1
     thread_progress = Progress(
         "{task.description}",
         SpinnerColumn(),
@@ -219,7 +218,7 @@ if __name__ == '__main__':
         random_hash = ''.join(random.SystemRandom().choice('abcdef' + string.digits) for _ in range(64))
         task_id = thread_progress.add_task(description=f"Thread {i}: {random_hash}", total=MAX_ITERATIONS)
         processes.append(Process(target=calculate_hash,
-                                 args=(LATEST_TERMINATING_HASH, MAX_ITERATIONS, random_hash, i, num_processes, shared_array)))
+                                 args=(LATEST_TERMINATING_HASH, MAX_ITERATIONS, random_hash, i, shared_array)))
         processes[i].start()
 
     grid = Table.grid(expand=True)
@@ -270,7 +269,7 @@ if __name__ == '__main__':
                                 thread_progress.tasks[task_id].total = MAX_ITERATIONS
                                 thread_progress.tasks[task_id].description = f"Thread {idx}: {random_hash}"
                                 processes[index] = Process(target=calculate_hash, args=(
-                                    LATEST_TERMINATING_HASH, MAX_ITERATIONS, random_hash, idx, num_processes, shared_array))
+                                    LATEST_TERMINATING_HASH, MAX_ITERATIONS, random_hash, idx, shared_array))
                                 processes[index].start()
                                 break
                         hashes_checked += 1
