@@ -231,7 +231,7 @@ if __name__ == '__main__':
 
     layout = make_layout()
     layout["header"].update(Panel(grid, style="white"))
-    layout["hash"].update(Text(f"Terminating Hash List: [{terminating_hashes[0]} ... {terminating_hashes[len(terminating_hashes)-1]}]", style="bold magenta"))
+    layout["hash"].update(Text(f"Latest Terminating Hash: {LATEST_TERMINATING_HASH} (Previously: N/A)", style="bold magenta"))
     layout["iterations"].update(Text(f"Maximum Hashes Executed Per Thread: {MAX_ITERATIONS}", style="bold magenta"))
     layout["winner"].update(Text("Winning hash: N/A", style="bold yellow"))
     layout["overall"].update(generate_overall_progress_table("0"))
@@ -282,9 +282,9 @@ if __name__ == '__main__':
                             LATEST_TERMINATING_HASH = get_latest_hash_from_site(LATEST_TERMINATING_HASH)
                             if original != LATEST_TERMINATING_HASH:
                                 terminating_hashes = populate_terminating_hashes(LATEST_TERMINATING_HASH, 100)
-                                layout["hash"].update(Text(
-                                    f"Terminating Hash List: [{terminating_hashes[0]} ... {terminating_hashes[len(terminating_hashes) - 1]}]",
-                                    style="bold magenta"))
+                                layout["hash"].update(
+                                    Text(f"Latest Terminating Hash: {LATEST_TERMINATING_HASH} (Previously: {original})",
+                                         style="bold magenta"))
                             start_time_2 = time.time()
 
             layout["progress"].update(generate_thread_table(thread_progress))
