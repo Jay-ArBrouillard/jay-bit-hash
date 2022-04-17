@@ -13,3 +13,8 @@ Install the required Python packages
 ```sh
 pip -r requirements.txt
 ```
+
+## Run it
+```sh
+py main.py
+```
