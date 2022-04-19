@@ -194,7 +194,7 @@ def temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS):
 
 if __name__ == '__main__':
     # Default values
-    LATEST_TERMINATING_HASH = '563afff49ef50536280ab566f094211a3f9fe74c0067c73371c59a064d5e965c'
+    LATEST_TERMINATING_HASH = '446082d34a268af16025a26a52bc2741289c6d3efda2edc53cab8c8c362aa30f'
     MAX_ITERATIONS = 20160  # About 1 week(s) ahead based on about 30 seconds per game
     processes = []
 
