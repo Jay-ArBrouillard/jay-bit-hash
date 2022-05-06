@@ -2,6 +2,7 @@ import ctypes
 import hashlib
 import multiprocessing.managers
 import os
+import platform
 import random
 import string
 import struct
@@ -94,11 +95,13 @@ def get_latest_hash_from_site(LATEST_TERMINATING_HASH):
             driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=selenium_options)
             driver.get('https://bustabit.com/play')
 
-            history_tab = driver.find_element(by=By.XPATH,
-                                              value="//*[@id=\"root\"]/div/div/div[6]/div/div[1]/ul/li[2]")
+            waiter = WebDriverWait(driver, 20)
+            history_tab = waiter.until(
+                expected_conditions.visibility_of_element_located((
+                    By.XPATH, "//*[@id=\"root\"]/div/div/div[6]/div/div[1]/ul/li[2]")))
             history_tab.click()
 
-            first_row_fifth_col = WebDriverWait(driver, 20).until(
+            first_row_fifth_col = waiter.until(
                 expected_conditions.visibility_of_element_located((
                     By.XPATH, "//*[@id=\"root\"]/div/div/div[6]/div/div[2]/div/table/tbody/tr[1]/td[5]/input")))
             latest_hash_from_site = first_row_fifth_col.get_attribute('value')
@@ -194,8 +197,8 @@ def temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS):
 
 if __name__ == '__main__':
     # Default values
-    LATEST_TERMINATING_HASH = '563afff49ef50536280ab566f094211a3f9fe74c0067c73371c59a064d5e965c'
-    MAX_ITERATIONS = 20160  # About 1 week(s) ahead based on about 30 seconds per game
+    LATEST_TERMINATING_HASH = 'de817dd783e460704b691d7f80f3af71c3a98c42296329e8ec3b77abab24a5ca'
+    MAX_ITERATIONS = 2880  # About 1 day ahead based on about 30 seconds per game
     processes = []
 
     LATEST_TERMINATING_HASH = get_latest_hash_from_site(LATEST_TERMINATING_HASH)
@@ -206,6 +209,7 @@ if __name__ == '__main__':
     # temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS)
 
     cpu_count = os.cpu_count()
+    # cpu_count = 1
     thread_progress = Progress(
         "{task.description}",
         SpinnerColumn(),
