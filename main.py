@@ -7,6 +7,7 @@ import random
 import string
 import struct
 import time
+import threading
 from datetime import datetime
 from multiprocessing import Process
 
@@ -69,11 +70,12 @@ def generate_overall_progress_table(num_hashes) -> Table:
     minutes, seconds = divmod(elapsed, 60)
     
     hashes_per_minute = int(num_hashes) / max(1, elapsed / 60)
+    hashes_per_hour = int(num_hashes) / max(1, elapsed / 3600) if elapsed >= 3600 else hashes_per_minute * 60
     
     overall_table.add_row(
         num_hashes,
         str(round(hashes_per_minute, 4)),
-        str(round(hashes_per_minute * 60, 4)),
+        str(round(hashes_per_hour, 4)),
         "{:0>2}:{:0>2}:{:0>2}:{:05.2f}".format(int(days), int(hours), int(minutes), seconds)
     )
     return overall_table
@@ -87,11 +89,10 @@ def generate_thread_table(thread_progress: Progress) -> Table:
     return progress_table
 
 
-def get_latest_hash_from_site(LATEST_TERMINATING_HASH):
+def get_latest_hash_from_site(LATEST_TERMINATING_HASH, tries = 3):
     """Attempt to set LATEST_TERMINATING_HASH from bustabit.com website.
        Be careful not to run this too often as to prevent ip block.
     """
-    tries = 3
     for i in range(tries):
         try:
             selenium_options = Options()
@@ -121,29 +122,15 @@ def get_latest_hash_from_site(LATEST_TERMINATING_HASH):
             else:
                 console.print_exception()
         return LATEST_TERMINATING_HASH
+        
 
-
-# def calculate_hashes_left_in_chain(LATEST_TERMINATING_HASH):
-#     """Return the number of hashes left to play in Bustabit game
-#        This is calculated by taking the latest hash played and hashing it until we reach the first hash of the chain
-#        86728f5fc3bd99db94d3cdaf105d67788194e9701bf95d049ad0e1ee3d004277. After we reach that, we know how many games
-#        have been played. At this point just do 10 million subtracted by how games have been played.
-#     """
-#     m = hashlib.sha256()
-#     m.update(str.encode(LATEST_TERMINATING_HASH))
-#     hex_digest = m.hexdigest()
-#
-#     iteration = 1
-#     while iteration < 10000000:
-#         m = hashlib.sha256()
-#         m.update(str.encode(hex_digest))
-#         hex_digest = m.hexdigest()
-#         if hex_digest == "86728f5fc3bd99db94d3cdaf105d67788194e9701bf95d049ad0e1ee3d004277":
-#             break
-#         iteration += 1
-#     GAMES_LEFT = 10000000 - iteration
-#     console.log(f"Bustabit games left to play {GAMES_LEFT}")
-#     return GAMES_LEFT
+def threaded_get_latest_hash_from_site(layout, LATEST_TERMINATING_HASH):
+    original = LATEST_TERMINATING_HASH
+    LATEST_TERMINATING_HASH = get_latest_hash_from_site(LATEST_TERMINATING_HASH, 3)
+    if original != LATEST_TERMINATING_HASH:
+        layout["hash"].update(
+            Text(f"Latest Terminating Hash: {LATEST_TERMINATING_HASH} (Previously: {original})",
+                 style="bold magenta"))
 
 
 def calculate_hash(terminating_hash_list, MAX_ITERATIONS, random_hash, index_in_array, shared_array):
@@ -184,11 +171,11 @@ def temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS):
 
 if __name__ == '__main__':
     # Default values
-    LATEST_TERMINATING_HASH = '668ccbf1b2a21bb2cab3ebe8487eff56d3981c39d8da8fc9e06546ff830eeeb4'
+    LATEST_TERMINATING_HASH = '20fee488a8d744da7174fc73b6ad652aba809fb577572a7300e7eede106115fb'
     MAX_ITERATIONS = 2880  # About 1 day ahead based on about 30 seconds per game
     processes = []
 
-    LATEST_TERMINATING_HASH = get_latest_hash_from_site(LATEST_TERMINATING_HASH)
+    LATEST_TERMINATING_HASH = get_latest_hash_from_site(LATEST_TERMINATING_HASH, 5)
     console.log("Using LATEST_TERMINATING_HASH: %s" % LATEST_TERMINATING_HASH)
     # temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS)
 
@@ -265,13 +252,9 @@ if __name__ == '__main__':
 
                         # Grab the latest terminating hash from bustabit.com every x minutes
                         elapsed_seconds = time.time() - start_time_2
-                        if elapsed_seconds / 60 >= 5:
-                            original = LATEST_TERMINATING_HASH
-                            LATEST_TERMINATING_HASH = get_latest_hash_from_site(LATEST_TERMINATING_HASH)
-                            if original != LATEST_TERMINATING_HASH:
-                                layout["hash"].update(
-                                    Text(f"Latest Terminating Hash: {LATEST_TERMINATING_HASH} (Previously: {original})",
-                                         style="bold magenta"))
+                        if elapsed_seconds / 60 >= 1.1:
+                            t = threading.Thread(target=threaded_get_latest_hash_from_site, args=(layout, LATEST_TERMINATING_HASH))
+                            t.start()
                             start_time_2 = time.time()
 
             layout["progress"].update(generate_thread_table(thread_progress))
