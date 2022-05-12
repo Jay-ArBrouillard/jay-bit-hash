@@ -131,6 +131,7 @@ def threaded_get_latest_hash_from_site(layout, LATEST_TERMINATING_HASH):
         layout["hash"].update(
             Text(f"Latest Terminating Hash: {LATEST_TERMINATING_HASH} (Previously: {original})",
                  style="bold magenta"))
+    start_time_2 = time.time()
 
 
 def calculate_hash(terminating_hash_list, MAX_ITERATIONS, random_hash, index_in_array, shared_array):
@@ -252,10 +253,10 @@ if __name__ == '__main__':
 
                         # Grab the latest terminating hash from bustabit.com every x minutes
                         elapsed_seconds = time.time() - start_time_2
-                        if elapsed_seconds / 60 >= 1.1:
+                        if elapsed_seconds / 60 >= 1.5:
                             t = threading.Thread(target=threaded_get_latest_hash_from_site, args=(layout, LATEST_TERMINATING_HASH))
                             t.start()
-                            start_time_2 = time.time()
+                        
 
             layout["progress"].update(generate_thread_table(thread_progress))
 
