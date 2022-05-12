@@ -56,20 +56,24 @@ def make_layout() -> Layout:
 
 def generate_overall_progress_table(num_hashes) -> Table:
     global start_time
+    elapsed = time.time() - start_time
+    
     overall_table = Table(title="Overall Progress", expand=True, border_style="green")
     overall_table.add_column("Hashes Checked")
-    overall_table.add_column("Hashes Per Minute")
-    overall_table.add_column("Hashes Per Hour")
+    overall_table.add_column("Hashes Per Minute" if elapsed >= 60 else "Hashes Per Minute (estimated)")
+    overall_table.add_column("Hashes Per Hour" if elapsed >= 3600 else "Hashes Per Hour (estimated)") 
     overall_table.add_column("Elapsed Time")
 
-    elapsed = time.time() - start_time
     days, hours = divmod(elapsed, 86400)
     hours, minutes = divmod(elapsed, 3600)
     minutes, seconds = divmod(elapsed, 60)
+    
+    hashes_per_minute = int(num_hashes) / max(1, elapsed / 60)
+    
     overall_table.add_row(
         num_hashes,
-        str(round(int(num_hashes) / max(1, elapsed / 60), 4)),
-        str(round(int(num_hashes) / max(1, elapsed / 3600), 4)),
+        str(round(hashes_per_minute, 4)),
+        str(round(hashes_per_minute * 60, 4)),
         "{:0>2}:{:0>2}:{:0>2}:{:05.2f}".format(int(days), int(hours), int(minutes), seconds)
     )
     return overall_table
