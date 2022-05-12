@@ -163,23 +163,6 @@ def calculate_hash(terminating_hash_list, MAX_ITERATIONS, random_hash, index_in_
     shared_array[3 * index_in_array + 2] = 1
 
 
-def populate_terminating_hashes(LATEST_TERMINATING_HASH, list_size: int):
-    m = hashlib.sha256()
-    m.update(str.encode(LATEST_TERMINATING_HASH))
-    hex_digest = m.hexdigest()
-
-    list = []
-    list.append(LATEST_TERMINATING_HASH)
-    list.append(hex_digest)
-    for _ in range(list_size-2):
-        m = hashlib.sha256()
-        m.update(str.encode(hex_digest))
-        hex_digest = m.hexdigest()
-        list.append(hex_digest)
-
-    return list
-
-
 def temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS):
     m = hashlib.sha256()
     # m.update(str.encode(random_hash))
@@ -197,14 +180,11 @@ def temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS):
 
 if __name__ == '__main__':
     # Default values
-    LATEST_TERMINATING_HASH = 'de817dd783e460704b691d7f80f3af71c3a98c42296329e8ec3b77abab24a5ca'
+    LATEST_TERMINATING_HASH = '668ccbf1b2a21bb2cab3ebe8487eff56d3981c39d8da8fc9e06546ff830eeeb4'
     MAX_ITERATIONS = 2880  # About 1 day ahead based on about 30 seconds per game
     processes = []
 
     LATEST_TERMINATING_HASH = get_latest_hash_from_site(LATEST_TERMINATING_HASH)
-    # List of hashes after the LATEST_TERMINATING_HASH. This will improve chances we find a
-    # winning hash at the cost of searching through this list in calculate_hash
-    terminating_hashes = populate_terminating_hashes(LATEST_TERMINATING_HASH, 100)
     console.log("Using LATEST_TERMINATING_HASH: %s" % LATEST_TERMINATING_HASH)
     # temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS)
 
@@ -285,7 +265,6 @@ if __name__ == '__main__':
                             original = LATEST_TERMINATING_HASH
                             LATEST_TERMINATING_HASH = get_latest_hash_from_site(LATEST_TERMINATING_HASH)
                             if original != LATEST_TERMINATING_HASH:
-                                terminating_hashes = populate_terminating_hashes(LATEST_TERMINATING_HASH, 100)
                                 layout["hash"].update(
                                     Text(f"Latest Terminating Hash: {LATEST_TERMINATING_HASH} (Previously: {original})",
                                          style="bold magenta"))
