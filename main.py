@@ -131,7 +131,6 @@ def threaded_get_latest_hash_from_site(layout, LATEST_TERMINATING_HASH):
         layout["hash"].update(
             Text(f"Latest Terminating Hash: {LATEST_TERMINATING_HASH} (Previously: {original})",
                  style="bold magenta"))
-    start_time_2 = time.time()
 
 
 def calculate_hash(terminating_hash_list, MAX_ITERATIONS, random_hash, index_in_array, shared_array):
@@ -172,7 +171,7 @@ def temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS):
 
 if __name__ == '__main__':
     # Default values
-    LATEST_TERMINATING_HASH = '20fee488a8d744da7174fc73b6ad652aba809fb577572a7300e7eede106115fb'
+    LATEST_TERMINATING_HASH = 'eb7b6bb44dcabce554f8f68abba4177b095a8f049fab1c2c98c8d9604d3d391d'
     MAX_ITERATIONS = 2880  # About 1 day ahead based on about 30 seconds per game
     processes = []
 
@@ -256,6 +255,7 @@ if __name__ == '__main__':
                         if elapsed_seconds / 60 >= 1.5:
                             t = threading.Thread(target=threaded_get_latest_hash_from_site, args=(layout, LATEST_TERMINATING_HASH))
                             t.start()
+                            start_time_2 = time.time()
                         
 
             layout["progress"].update(generate_thread_table(thread_progress))
