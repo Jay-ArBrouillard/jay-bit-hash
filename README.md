@@ -10,10 +10,11 @@ Works with Linux, OSX, and Windows. Requires Python 3.6.3 or later.
 ## Requirements
 Install the required Python packages. I'd suggest creating an virtual environment, activating the environment, and then installing dependencies there instead of installing the dependencies globally.
 
-### windows
 ```sh
+# Optionally create and activate virtual environment
 virtualenv venv
-source venv/bin/activate ## activating virtual environment command is different for windows
+source venv/bin/activate ## This is the linux syntax. For windows it look something like: venv\Scripts\activate
+
 pip install -r requirements.txt
 ```
 
