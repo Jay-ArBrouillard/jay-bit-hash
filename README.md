@@ -8,10 +8,11 @@ jay-bit-hash is a terminal based, Python application attempting to crack future 
 Works with Linux, OSX, and Windows. Requires Python 3.6.3 or later.
 
 ## Requirements
-Install the required Python packages
+Install the required Python packages. I'd suggest creating an virtual environment, activating the environment, and then installing dependencies there instead of installing the dependencies globally.
 
 ```sh
-pip -r requirements.txt
+virtualenv venv
+pip install -r requirements.txt
 ```
 
 ## Run it
