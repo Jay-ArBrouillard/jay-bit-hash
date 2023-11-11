@@ -108,8 +108,9 @@ def get_latest_hash_from_site(LATEST_TERMINATING_HASH, tries = 3):
 
             first_row_fifth_col = waiter.until(
                 expected_conditions.visibility_of_element_located((
-                    By.XPATH, "//*[@id=\"root\"]/div/div/div[6]/div/div[2]/div/table/tbody/tr[1]/td[5]/input")))
+                    By.XPATH, "//*[@id=\"root\"]/div/div/div[6]/div/div[2]/div/table/tbody/tr[2]/td[5]/input")))
             latest_hash_from_site = first_row_fifth_col.get_attribute('value')
+
             if latest_hash_from_site is not None and len(latest_hash_from_site) == 64:
                 console.print("Successfully found hash from Bustabit.com", style='success')
                 return latest_hash_from_site
@@ -160,7 +161,7 @@ def temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS):
     m.update(str.encode("7o8a2mdivghx81b0ju9soed7b45zx0qaem8vkc0vy9f9a1hklas3szjcmut90cnz"))
     hex_digest = m.hexdigest()
 
-    for iteration in range(MAX_ITERATIONS + 1):
+    for _ in range(MAX_ITERATIONS + 1):
         m = hashlib.sha256()
         m.update(str.encode(hex_digest))
         hex_digest = m.hexdigest()
@@ -171,7 +172,7 @@ def temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS):
 
 if __name__ == '__main__':
     # Default values
-    LATEST_TERMINATING_HASH = 'eb7b6bb44dcabce554f8f68abba4177b095a8f049fab1c2c98c8d9604d3d391d'
+    LATEST_TERMINATING_HASH = '39694021b25fe291fd53d53f4dc413825efe70b0f8e720d77a763c1448568e1e'
     MAX_ITERATIONS = 2880  # About 1 day ahead based on about 30 seconds per game
     processes = []
 
