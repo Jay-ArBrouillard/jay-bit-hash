@@ -103,12 +103,12 @@ def get_latest_hash_from_site(LATEST_TERMINATING_HASH, tries = 3):
             waiter = WebDriverWait(driver, 20)
             history_tab = waiter.until(
                 expected_conditions.visibility_of_element_located((
-                    By.XPATH, "//*[@id=\"root\"]/div/div/div[6]/div/div[1]/ul/li[2]")))
+                    By.XPATH, "//*[@id=\"root\"]/div[1]/div/div[5]/div/div[1]/ul/li[2]")))
             history_tab.click()
 
             first_row_fifth_col = waiter.until(
                 expected_conditions.visibility_of_element_located((
-                    By.XPATH, "//*[@id=\"root\"]/div/div/div[6]/div/div[2]/div/table/tbody/tr[2]/td[5]/input")))
+                    By.XPATH, "//*[@id=\"root\"]/div[1]/div/div[5]/div/div[2]/div/table/tbody/tr[1]/td[5]/input")))
             latest_hash_from_site = first_row_fifth_col.get_attribute('value')
 
             if latest_hash_from_site is not None and len(latest_hash_from_site) == 64:
