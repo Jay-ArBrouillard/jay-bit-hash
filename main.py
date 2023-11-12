@@ -72,7 +72,7 @@ def generate_overall_progress_table(num_hashes) -> Table:
     minutes = elapsed / 60.0
     elapsed %= 60.0
     
-    hashes_per_minute = float(num_hashes) / max(1.0, minutes)
+    hashes_per_minute = num_hashes / minutes
     hashes_per_hour = hashes_per_minute * 60
     
     overall_table.add_row(
