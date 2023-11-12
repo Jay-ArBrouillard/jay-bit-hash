@@ -25,6 +25,12 @@ source venv/bin/activate ## This is the linux syntax. For windows it look someth
 
 pip install -r requirements.txt
 ```
+## Known Errors
+ValueError: There is no such driver by url
+https://chromedriver.storage.googleapis.com/LATEST_RELEASE_119.0.6045
+
+Fixed using: python3 -m pip install webdriver-manager --upgrade
+
 
 ## Run it
 Run the main python file.
