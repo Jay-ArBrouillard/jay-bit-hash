@@ -13,14 +13,14 @@ Winning Hash - if this value is not N/A, then you won. You can use this hash to 
 Threads (Section) - shows the randomly generated hash each thread is currently checking. There will be a line per thread available on your CPU. Thus, more threads and/or more powerful CPU cores will result in more hashes per hour checked.  
 
 ## Compatibility
-Works with Linux, OSX, and Windows. Requires Python 3.6.3 or later.
+Works with Linux, OSX, and Windows. Requires Python 3.7 or later.
 
 ## Requirements
 Install the required Python packages. I'd suggest creating an virtual environment, activating the environment, and then installing dependencies there instead of installing the dependencies globally.
 
 ```sh
 # Optionally create and activate virtual environment
-virtualenv venv
+virtualenv venv ## You can force the Python version i.e: virtualenv -p python3.9 venv
 source venv/bin/activate ## This is the linux syntax. For windows it look something like: venv\Scripts\activate
 
 pip install -r requirements.txt
