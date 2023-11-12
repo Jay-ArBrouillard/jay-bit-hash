@@ -78,7 +78,7 @@ def generate_overall_progress_table(num_hashes) -> Table:
         num_hashes,
         str(round(hashes_per_minute, 2)),
         str(round(hashes_per_hour, 2)),
-        "{:0>2}:{:0>2}:{:0>2}:{:05.2f}".format(int(days), int(hours), int(minutes), seconds)
+        "{:0>2}:{:0>2}:{:0>2}:{:05.2f}".format(int(days), int(hours), int(minutes), elapsed)
     )
     return overall_table
 
