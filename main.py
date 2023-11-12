@@ -65,9 +65,9 @@ def generate_overall_progress_table(num_hashes) -> Table:
     overall_table.add_column("Hashes Per Hour") 
     overall_table.add_column("Elapsed Time")
 
-    days, remainder = divmod(elapsed, 86400)
-    hours, remainder = divmod(remainder, 3600)
-    minutes, seconds = divmod(remainder, 60)
+    days, remainder = divmod(elapsed, 86400.0)
+    hours, remainder = divmod(remainder, 3600.0)
+    minutes, seconds = divmod(remainder, 60.0)
     
     hashes_per_minute = float(num_hashes) / max(1.0, minutes)
     hashes_per_hour = hashes_per_minute * 60.0
