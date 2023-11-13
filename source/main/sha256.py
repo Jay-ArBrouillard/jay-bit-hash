@@ -26,9 +26,9 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
-from functions import calculate_hash
-
 # Global Variables #
+from source.main.functions import calculate_hash
+
 console = Console(record=True, theme=Theme({'success': 'green', 'error': 'bold red', 'init': 'yellow'}))
 start_time = time.time()
 start_time_2 = time.time()
@@ -59,7 +59,6 @@ def generate_stats_panel(num_hashes) -> Panel:
         Column(header="H/Min", justify="center"),
         Column(header="H/Hour", justify="center"),
         Column(header="Elapsed Time", justify="center"),
-        Column(header="MAX ITERATIONS", justify="center"),
         box=None,
         expand=True,
         header_style="underline",
@@ -81,7 +80,6 @@ def generate_stats_panel(num_hashes) -> Panel:
         str(round(hashes_per_minute, 2)),
         str(round(hashes_per_hour, 2)),
         "{:0>2}:{:0>2}:{:0>2}:{:05.2f}".format(int(days), int(hours), int(minutes), elapsed),
-        str(MAX_ITERATIONS)
     )
 
     stats_panel = Panel(
@@ -265,9 +263,10 @@ def temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS):
             break
 
 
-if __name__ == '__main__':
+def execute():
+    global start_time_2
     # MAX_ITERATIONS = 2880  # About 1 day ahead based on about 30 seconds per game
-    MAX_ITERATIONS = 86400  # About 30 days ahead based on about 30 seconds per game
+    MAX_ITERATIONS = 20160  # About 7 days ahead based on about 30 seconds per game
     processes = []
     # index 0 is bustabit, index 1 is ethercrash
     latest_terminating_hashes[0] = get_latest_hash_from_bustabit(5)
@@ -307,7 +306,7 @@ if __name__ == '__main__':
     webdriver_thread = threading.Thread(target=get_latest_hashes_from_all_sites, args=[return_list])
     webdriver_thread_started = False
     winner_found = False
-    with Live(layout, refresh_per_second=60, screen=True):
+    with Live(layout, refresh_per_second=30, screen=True):
         while continue_loop:
             for process_idx, process in enumerate(processes):
                 # Thread completed
@@ -335,10 +334,6 @@ if __name__ == '__main__':
                         random_hash = ''.join(random.SystemRandom().choice('abcdef' + string.digits) for _ in range(64))
                         hashes[process_idx] = random_hash
 
-                        if random.random() < 0.01:
-                            hashes[process_idx] = "7670e08981146b3d4359ac69d23ad91806732f062dcbdc71b9db3e62c1c2f6e7"
-                            random_hash = "7670e08981146b3d4359ac69d23ad91806732f062dcbdc71b9db3e62c1c2f6e7"
-
                         process.terminate()  # ensure current process is terminated
                         processes[process_idx] = Process(target=calculate_hash,
                                                          args=(latest_terminating_hashes, MAX_ITERATIONS, random_hash,
@@ -346,8 +341,7 @@ if __name__ == '__main__':
                         processes[process_idx].start()
 
                     hashes_checked += 1
-
-                layout["threads"].update(generate_threads_panel(processes, hashes))
+                    layout["threads"].update(generate_threads_panel(processes, hashes))
                 layout["stats"].update(generate_stats_panel(str(hashes_checked)))
 
             # Grab the latest terminating hash from each website every x minutes
@@ -370,3 +364,7 @@ if __name__ == '__main__':
                 webdriver_thread_started = False
 
     console.save_html("output_all.html")
+
+
+if __name__ == '__main__':
+    execute()

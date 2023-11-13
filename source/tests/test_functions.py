@@ -1,7 +1,7 @@
 import multiprocessing
 
-import functions as my_functions
-from main import shared_array_chunk_size
+from source.main import functions as my_functions
+from source.main.sha256 import shared_array_chunk_size
 
 
 def test_calculate_hash_1_1_iteration_success():

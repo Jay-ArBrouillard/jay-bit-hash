@@ -35,7 +35,7 @@ Fixed using: python3 -m pip install webdriver-manager --upgrade
 ## Run it
 Run the main python file.
 ```sh
-py main.py
+py sha256.py
 ```
 
 ## Donations

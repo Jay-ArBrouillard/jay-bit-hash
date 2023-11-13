@@ -1,6 +1,6 @@
 import hashlib
 
-from main import shared_array_chunk_size
+shared_array_chunk_size = 4
 
 
 def calculate_hash(latest_terminating_hashes, max_iterations, hash_in_decimal, index_in_array, shared_array) -> None:
