@@ -1,0 +1,7 @@
+env/
+venv/
+Library/
+.idea
+source/tests/.pytest_cache/
+*.html
+*.pyc
