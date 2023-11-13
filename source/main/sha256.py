@@ -306,7 +306,7 @@ def execute():
     webdriver_thread = threading.Thread(target=get_latest_hashes_from_all_sites, args=[return_list])
     webdriver_thread_started = False
     winner_found = False
-    with Live(layout, refresh_per_second=30, screen=True):
+    with Live(layout, refresh_per_second=4, screen=True):
         while continue_loop:
             for process_idx, process in enumerate(processes):
                 # Thread completed
