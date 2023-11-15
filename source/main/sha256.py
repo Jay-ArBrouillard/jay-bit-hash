@@ -13,7 +13,7 @@ from rich import box
 from rich.console import Console
 from rich.layout import Layout
 from rich.panel import Panel
-from rich.progress import track
+from rich.progress import track, Progress, MofNCompleteColumn
 from rich.table import Column, Table
 from rich.theme import Theme
 from rich.live import Live
@@ -34,7 +34,9 @@ start_time = time.time()
 start_time_2 = time.time()
 shared_array_chunk_size = 4
 latest_terminating_hashes = ['', '']
-
+latest_game_number = [1, 1]
+latest_game_multiplier = ['', '']
+sha_iterations_per_hash = 86400
 
 def make_layout() -> Layout:
     """Define the layout."""
@@ -51,7 +53,6 @@ def make_layout() -> Layout:
 
 
 def generate_stats_panel(num_hashes) -> Panel:
-    global start_time
     elapsed = time.time() - start_time
 
     stats_table = Table(
@@ -59,6 +60,7 @@ def generate_stats_panel(num_hashes) -> Panel:
         Column(header="H/Min", justify="center"),
         Column(header="H/Hour", justify="center"),
         Column(header="Elapsed Time", justify="center"),
+        Column(header="Hashes per Thread", justify="center"),
         box=None,
         expand=True,
         header_style="underline",
@@ -80,6 +82,7 @@ def generate_stats_panel(num_hashes) -> Panel:
         str(round(hashes_per_minute, 2)),
         str(round(hashes_per_hour, 2)),
         "{:0>2}:{:0>2}:{:0>2}:{:05.2f}".format(int(days), int(hours), int(minutes), elapsed),
+        str(sha_iterations_per_hash)
     )
 
     stats_panel = Panel(
@@ -93,12 +96,11 @@ def generate_stats_panel(num_hashes) -> Panel:
 
 
 def generate_bustabit_panel(winning_hash=None) -> Panel:
-    current_hash = latest_terminating_hashes[0]
     style_column2 = "bold green" if winning_hash else ""
     bustabit_table = Table.grid(expand=True)
     bustabit_table.add_column(justify="left")
     bustabit_table.add_column(justify="center", no_wrap=True, style=style_column2)
-    bustabit_table.add_row("Latest Terminating Hash", current_hash)
+    bustabit_table.add_row(f"Latest Terminating Hash (Game #{latest_game_number[0]} @ {latest_game_multiplier[0]})", latest_terminating_hashes[0])
     bustabit_table.add_row("Winning Hash", winning_hash if winning_hash else "N/A")
 
     bustabit_panel = Panel(
@@ -112,12 +114,11 @@ def generate_bustabit_panel(winning_hash=None) -> Panel:
 
 
 def generate_ethercrash_panel(winning_hash=None) -> Panel:
-    current_hash = latest_terminating_hashes[1]
     style_column2 = "bold green" if winning_hash else ""
     ethercrash_table = Table.grid(expand=True)
     ethercrash_table.add_column(justify="left")
     ethercrash_table.add_column(justify="center", no_wrap=True, style=style_column2)
-    ethercrash_table.add_row("Latest Terminating Hash", current_hash)
+    ethercrash_table.add_row(f"Latest Terminating Hash (Game #{latest_game_number[1]} @ {latest_game_multiplier[1]})", latest_terminating_hashes[1])
     ethercrash_table.add_row("Winning Hash", winning_hash if winning_hash else "N/A")
 
     ethercrash_panel = Panel(
@@ -130,13 +131,12 @@ def generate_ethercrash_panel(winning_hash=None) -> Panel:
     return ethercrash_panel
 
 
-def generate_threads_panel(processes: [Process], hashes: [string]) -> Panel:
+def generate_threads_panel(processes: [Process], progress_objects: [Progress]) -> Panel:
     threads_table = Table(
         Column(header="Thread #", justify="center"),
         Column(header="Process Id", justify="center"),
-        Column(header="Memory (MiB)", justify="center"),
         Column(header="State", justify="center"),
-        Column(header="Hash", justify="center"),
+        Column(header="Progress", justify="center"),
         box=None,
         expand=True,
         header_style="underline",
@@ -146,11 +146,10 @@ def generate_threads_panel(processes: [Process], hashes: [string]) -> Panel:
     for idx, proc in enumerate(processes):
         try:
             p = psutil.Process(proc.pid)
-            memory_usage = p.memory_info().rss / 1024 ** 2
             state = p.status()
-            threads_table.add_row(str(idx), str(proc.pid), "{0:.2f}".format(memory_usage), state, hashes[idx])
+            threads_table.add_row(str(idx), str(proc.pid), state, progress_objects[idx])
         except psutil.NoSuchProcess:
-            threads_table.add_row(str(idx), "-", "-", "not_alive", hashes[idx])
+            threads_table.add_row(str(idx), "-", "-", "not_alive", progress_objects[idx])
 
     threads_panel = Panel(
         threads_table,
@@ -176,7 +175,9 @@ def get_latest_hash_from_bustabit(tries=3) -> string:
             waiter = WebDriverWait(driver, 20)
             history_tab = waiter.until(
                 expected_conditions.visibility_of_element_located((
-                    By.XPATH, "//*[@id=\"root\"]/div[1]/div/div[5]/div/div[1]/ul/li[2]")))
+                    By.XPATH, "//*[@id=\"root\"]/div[1]/div/div[5]/div/div[1]/ul/li[2]")
+                )
+            )
             history_tab.click()
 
             first_row_fifth_col = waiter.until(
@@ -184,11 +185,27 @@ def get_latest_hash_from_bustabit(tries=3) -> string:
                     By.XPATH, "//*[@id=\"root\"]/div[1]/div/div[5]/div/div[2]/div/table/tbody/tr[1]/td[5]/input")))
             latest_hash_from_site = first_row_fifth_col.get_attribute('value')
 
-            if latest_hash_from_site is not None and len(latest_hash_from_site) == 64:
-                console.print("Successfully found hash from bustabit.com", style='success')
-                return latest_hash_from_site
+            bust_anchor = waiter.until(
+                expected_conditions.visibility_of_element_located((
+                    By.XPATH, "//*[@id=\"root\"]/div[1]/div/div[5]/div/div[2]/div/table/tbody/tr[1]/td[1]/a"
+                ))
+            )
+            bust_multiplier = bust_anchor.text
+            bust_anchor.click()
+
+            game_number_h3 = waiter.until(
+                expected_conditions.visibility_of_element_located((
+                    By.XPATH, "/html/body/div[3]/div/div/div[2]/div/div[1]/div[1]/h3"
+                ))
+            )
+            game_number = game_number_h3.text.split("#")[1]
+
+            if latest_hash_from_site is not None and len(latest_hash_from_site) == 64 and \
+                    game_number is not None and str(game_number).isnumeric():
+                console.print("Successfully found hash and game number from bustabit.com", style='success')
+                return latest_hash_from_site, game_number, bust_multiplier
             else:
-                raise Exception("Failed to find hash from bustabit.com")
+                raise Exception("Failed to find hash and game number from bustabit.com")
         except Exception as e:
             if i < tries - 1:  # i is zero indexed
                 continue
@@ -218,11 +235,29 @@ def get_latest_hash_from_ethercrash(tries=3) -> string:
                     By.XPATH, "//*[@id=\"games-log-container\"]/div[2]/table/tbody/tr[1]/td[5]/input")))
             latest_hash_from_site = first_row_fifth_col.get_attribute('value')
 
-            if latest_hash_from_site is not None and len(latest_hash_from_site) == 64:
-                console.print("Successfully found hash from ethercrash.io", style='success')
-                return latest_hash_from_site
+            crash_anchor = waiter.until(
+                expected_conditions.visibility_of_element_located((
+                    By.XPATH, "//*[@id=\"games-log-container\"]/div[2]/table/tbody/tr[1]/td[1]/a"
+                ))
+            )
+            crash_multiplier = crash_anchor.text
+            crash_anchor.click() # this opens a new tab
+
+            driver.switch_to.window(driver.window_handles[1])
+
+            game_number_h4 = waiter.until(
+                expected_conditions.visibility_of_element_located((
+                    By.XPATH, "/html/body/div[1]/div/h4"
+                ))
+            )
+            game_number = game_number_h4.text.split(" ")[1]
+
+            if latest_hash_from_site is not None and len(latest_hash_from_site) == 64 and \
+                    game_number is not None and str(game_number).isnumeric():
+                console.print("Successfully found hash and game number from ethercrash.io", style='success')
+                return latest_hash_from_site, game_number, crash_multiplier
             else:
-                raise Exception("Failed to find hash from ethercrash.io")
+                raise Exception("Failed to find hash and game number from ethercrash.io")
         except Exception as e:
             if i < tries - 1:  # i is zero indexed
                 continue
@@ -232,19 +267,32 @@ def get_latest_hash_from_ethercrash(tries=3) -> string:
 
 def get_latest_hashes_from_all_sites(list) -> None:
     """
-        Find new latest hashes from each website and return tuple
+        Find new latest hashes and game numbers from each website and return list
+        [hash1, gamenumber1, bust, hash2, gamenumber2, crash]
     """
     # bustabit
     original = latest_terminating_hashes[0]
-    new_bustabit_terminating_hash = get_latest_hash_from_bustabit()
-    if original != new_bustabit_terminating_hash:
-        list[0] = new_bustabit_terminating_hash
+    bustabit_hash, bustabit_game_number, bust = get_latest_hash_from_bustabit(5)
+    if original != bustabit_hash:
+        list[0] = bustabit_hash
+        list[1] = bustabit_game_number
+        list[2] = bust
 
     # ethercrash
     original = latest_terminating_hashes[1]
-    new_ethercrash_terminating_hash = get_latest_hash_from_ethercrash()
-    if original != new_ethercrash_terminating_hash:
-        list[1] = new_ethercrash_terminating_hash
+    ethercrash_hash, ethercrash_game_number, crash = get_latest_hash_from_ethercrash(5)
+    if original != ethercrash_hash:
+        list[3] = ethercrash_hash
+        list[4] = ethercrash_game_number
+        list[5] = crash
+    update_sha_iterations_per_hash()
+
+
+def update_sha_iterations_per_hash():
+    global sha_iterations_per_hash
+    bustabit_games_left = 10000000 - int(latest_game_number[0])
+    ethercrash_games_left = 10000000 - int(latest_game_number[1])
+    sha_iterations_per_hash = max(bustabit_games_left, ethercrash_games_left)
 
 
 def temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS):
@@ -265,25 +313,38 @@ def temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS):
 
 def execute():
     global start_time_2
-    # MAX_ITERATIONS = 2880  # About 1 day ahead based on about 30 seconds per game
-    MAX_ITERATIONS = 20160  # About 7 days ahead based on about 30 seconds per game
     processes = []
     # index 0 is bustabit, index 1 is ethercrash
-    latest_terminating_hashes[0] = get_latest_hash_from_bustabit(5)
-    latest_terminating_hashes[1] = get_latest_hash_from_ethercrash(5)
+    bustabit_hash, bustabit_game_number, bust = get_latest_hash_from_bustabit(5)
+    latest_terminating_hashes[0] = bustabit_hash
+    latest_game_number[0] = bustabit_game_number
+    latest_game_multiplier[0] = bust
+    ethercrash_hash, ethercrash_game_number, crash = get_latest_hash_from_ethercrash(5)
+    latest_terminating_hashes[1] = ethercrash_hash
+    latest_game_number[1] = ethercrash_game_number
+    latest_game_multiplier[1] = crash
+    update_sha_iterations_per_hash()
 
     console.log("latest_terminating_hashes: %s" % latest_terminating_hashes)
-    # temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS)
 
     cpu_count = os.cpu_count()
     shared_array = multiprocessing.Array('i', cpu_count * shared_array_chunk_size)
-    hashes = []  # The 64 character hash list. One hash given to each process. These are randomly generated
+    # Progress object is the status bar for each thread
+    progress_objects: [Progress] = []
+    progress_task_ids = []
 
     for i in track(range(cpu_count), description="Register and Start Processes..."):
         random_hash = ''.join(random.SystemRandom().choice('abcdef' + string.digits) for _ in range(64))
-        hashes.append(random_hash)
+        progress_object = Progress(
+            *Progress.get_default_columns(),
+            MofNCompleteColumn()
+        )
+        task_id = progress_object.add_task(description=random_hash, total=sha_iterations_per_hash)
+        progress_objects.append(progress_object)
+        progress_task_ids.append(task_id)
         processes.append(Process(target=calculate_hash,
-                                 args=(latest_terminating_hashes, MAX_ITERATIONS, random_hash, i, shared_array)))
+                                 args=(
+                                     latest_terminating_hashes, sha_iterations_per_hash, random_hash, i, shared_array)))
         processes[i].start()
 
     grid = Table.grid(expand=True)
@@ -299,23 +360,26 @@ def execute():
     layout["stats"].update(generate_stats_panel("0"))
     layout["section1"].update(generate_bustabit_panel())
     layout["section2"].update(generate_ethercrash_panel())
-    layout["threads"].update(generate_threads_panel(processes, hashes))
+    layout["threads"].update(generate_threads_panel(processes, progress_objects))
     hashes_checked = 0
     continue_loop = True
-    return_list = ['', '']
+    return_list = ['', '', '', '', '', '']
     webdriver_thread = threading.Thread(target=get_latest_hashes_from_all_sites, args=[return_list])
     webdriver_thread_started = False
     winner_found = False
+    iterations_list = [0.0] * len(processes)  # Store the last retrieve iteration for each process
     with Live(layout, refresh_per_second=4, screen=True):
         while continue_loop:
             for process_idx, process in enumerate(processes):
+                progress = progress_objects[process_idx]
+                task = progress.tasks[0]
                 # Thread completed
                 if shared_array[shared_array_chunk_size * process_idx + 2] == 1:
                     shared_array[shared_array_chunk_size * process_idx] = 0  # reset iteration to 0
                     shared_array[shared_array_chunk_size * process_idx + 2] = 0  # reset completed to false
                     if shared_array[shared_array_chunk_size * process_idx + 1] == 1:  # winner
                         winner_index = shared_array[shared_array_chunk_size * process_idx + 3]
-                        winning_hash = hashes[winner_index]
+                        winning_hash = task.description
                         console.log(f"WINNER, WINNER CHICKEN DINNER: {winning_hash}")
                         winner_found = True
                         # bustabit
@@ -328,25 +392,49 @@ def execute():
                         # Kill all Processes
                         for p in processes:
                             p.kill()
+                        # Complete all Tasks
+                        for p in progress_objects:
+                            task_id = p.tasks[0].id
+                            p.update(task_id, completed=True)
                     elif not winner_found:  # loser
                         # If a winner has not been found then,
                         # Start up a new process with a new random hash
                         random_hash = ''.join(random.SystemRandom().choice('abcdef' + string.digits) for _ in range(64))
-                        hashes[process_idx] = random_hash
 
                         process.terminate()  # ensure current process is terminated
                         processes[process_idx] = Process(target=calculate_hash,
-                                                         args=(latest_terminating_hashes, MAX_ITERATIONS, random_hash,
+                                                         args=(latest_terminating_hashes,
+                                                               sha_iterations_per_hash,
+                                                               random_hash,
                                                                process_idx, shared_array))
                         processes[process_idx].start()
+                        progress.reset(task_id=task_id, description=random_hash, total=sha_iterations_per_hash)
 
+                    iterations_list[process_idx] = 0.0
                     hashes_checked += 1
-                    layout["threads"].update(generate_threads_panel(processes, hashes))
+                    layout["threads"].update(generate_threads_panel(processes, progress_objects))
+                else:
+                    # update Progress
+                    shared_array[shared_array_chunk_size * process_idx + 2] == 1
+                    new_iteration = shared_array[shared_array_chunk_size * process_idx]
+                    delta: float = new_iteration - iterations_list[process_idx]
+                    # since the processes are concurrent we check if processes is done a second time before advancing
+                    # the progress bar
+                    if task.completed + delta >= task.total:
+                        random_hash = ''.join(random.SystemRandom().choice('abcdef' + string.digits) for _ in range(64))
+                        progress.reset(task_id=task_id, description=random_hash, total=sha_iterations_per_hash)
+                        iterations_list[process_idx] = 0.0
+                    else:
+                        progress.update(task_id=task.id, advance=delta)
+                        iterations_list[process_idx] = new_iteration
+
                 layout["stats"].update(generate_stats_panel(str(hashes_checked)))
+
+            update_sha_iterations_per_hash()
 
             # Grab the latest terminating hash from each website every x minutes
             elapsed_seconds = time.time() - start_time_2
-            if elapsed_seconds / 60 >= 1:
+            if elapsed_seconds / 60 >= 2:
                 if not winner_found and not webdriver_thread_started and not webdriver_thread.is_alive():
                     webdriver_thread.start()
                     webdriver_thread_started = True
@@ -356,14 +444,16 @@ def execute():
             # webdriver thread completed
             if webdriver_thread_started and not webdriver_thread.is_alive():
                 latest_terminating_hashes[0] = return_list[0]
-                latest_terminating_hashes[1] = return_list[1]
+                latest_game_number[0] = return_list[1]
+                latest_game_multiplier[0] = return_list[2]
+                latest_terminating_hashes[1] = return_list[3]
+                latest_game_number[1] = return_list[4]
+                latest_game_multiplier[1] = return_list[5]
                 webdriver_thread = threading.Thread(target=get_latest_hashes_from_all_sites,
                                                     args=[return_list])
                 layout["section1"].update(generate_bustabit_panel())
                 layout["section2"].update(generate_ethercrash_panel())
                 webdriver_thread_started = False
-
-    console.save_html("output_all.html")
 
 
 if __name__ == '__main__':
