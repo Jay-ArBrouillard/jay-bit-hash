@@ -169,6 +169,8 @@ def get_latest_hash_from_bustabit(tries=3) -> string:
         try:
             selenium_options = Options()
             selenium_options.headless = True
+            selenium_options.add_argument('--no-sandbox')
+            selenium_options.add_argument('--disable-dev-shm-usage')
             driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=selenium_options)
             driver.get('https://bustabit.com/play')
 
@@ -221,6 +223,8 @@ def get_latest_hash_from_ethercrash(tries=3) -> string:
         try:
             selenium_options = Options()
             selenium_options.headless = True
+            selenium_options.add_argument('--no-sandbox')
+            selenium_options.add_argument('--disable-dev-shm-usage')
             driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=selenium_options)
             driver.get('https://www.ethercrash.io/play')
 
