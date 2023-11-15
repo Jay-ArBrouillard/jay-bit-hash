@@ -11,13 +11,14 @@ Hashes (H) - The number of hashes checked by this program. Keep in mind this is 
 H/Min - The number of hashes (H) / total number of minutes that have passed since the program started
 H/Hour - The number of hashes (H) / total number of hours that have passed since the program started
 Elapsed Time - Amount of time that has passed since the program started. Displayed in format days:hours:minutes:seconds:milliseconds
+Hashes per Thread - The number of time a each thread will hash against this self. This number will decrease as games are completed.
 Latest Terminating Hash - For a given casino (i.e bustabit), the latest SHA256 hash that was pulled. This application will periodically update this value.  
 Winning Hash - if this value is not N/A, then you won. You can use this hash to find the result of all games that came before it. See the open-source [verification tool](https://jsfiddle.net/Dexon95/2fmuxLza/show).  
 Threads (Section) - shows the randomly generated hash each thread is currently checking. There will be a thread per CPU Core available on your system. Thus, more threads and/or more powerful CPU cores will result in more hashes per hour checked.  
 
 ## Share Your Results!
 I'm interested to know what kind of speeds your systems achieving in terms of hashes per hour.  
-With my Intel(R) Core(TM) i7-10700K CPU @ 3.80GHz I am able to get around 53k H/Hour
+With my Intel(R) Core(TM) i7-10700K CPU @ 3.80GHz I am able to get around 257 H/Hour at 3.3 million Hashes per Thread.
 
 ## Compatibility
 Works with Linux, OSX, and Windows. Requires Python 3.7 or later.
@@ -40,9 +41,9 @@ Fixed using: python3 -m pip install webdriver-manager --upgrade
 
 
 ## Run it
-Run the main python file.
+Run the top level python file.
 ```sh
-py sha256.py
+py run.py
 ```
 
 ## Donations
