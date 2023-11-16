@@ -30,3 +30,10 @@ def calculate_hash(latest_terminating_hashes, max_iterations, hash_in_decimal, i
         hex_digest = m.hexdigest()
 
     shared_array[shared_array_chunk_size * index_in_array + 2] = 1
+
+
+def median(lst):
+    quotient, remainder = divmod(len(lst), 2)
+    if remainder:
+        return sorted(lst)[quotient]
+    return sum(sorted(lst)[quotient - 1:quotient + 1]) / 2

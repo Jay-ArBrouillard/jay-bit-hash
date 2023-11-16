@@ -27,16 +27,17 @@ from selenium.webdriver.support.wait import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
 # Global Variables #
-from source.main.functions import calculate_hash
+from source.main.functions import calculate_hash, median
 
 console = Console(record=True, theme=Theme({'success': 'green', 'error': 'bold red', 'init': 'yellow'}))
 start_time = time.time()
 start_time_2 = time.time()
 shared_array_chunk_size = 4
-latest_terminating_hashes = ['', '']
-latest_game_number = [1, 1]
-latest_game_multiplier = ['', '']
+latest_terminating_hashes = ['', '', '']
+latest_game_number = [1, 1, 1]
+latest_game_multiplier = ['', '', '']
 sha_iterations_per_hash = 86400
+
 
 def make_layout() -> Layout:
     """Define the layout."""
@@ -47,6 +48,7 @@ def make_layout() -> Layout:
         Layout(name="stats", size=5),
         Layout(name="section1", size=5),
         Layout(name="section2", size=5),
+        Layout(name="section3", size=5),
         Layout(name="threads")
     )
     return layout
@@ -127,8 +129,25 @@ def generate_ethercrash_panel(winning_hash=None) -> Panel:
         title="ethercrash",
         border_style="#5A6EBF"
     )
-
     return ethercrash_panel
+
+
+def generate_nanogames_panel(winning_hash=None) -> Panel:
+    style_column2 = "bold green" if winning_hash else ""
+    nanogames_table = Table.grid(expand=True)
+    nanogames_table.add_column(justify="left")
+    nanogames_table.add_column(justify="center", no_wrap=True, style=style_column2)
+    nanogames_table.add_row(f"Latest Terminating Hash (Game #{latest_game_number[2]} @ {latest_game_multiplier[2]})", latest_terminating_hashes[2])
+    nanogames_table.add_row("Winning Hash", winning_hash if winning_hash else "N/A")
+
+    nanogames_panel = Panel(
+        nanogames_table,
+        box=box.ROUNDED,
+        title="nanogames",
+        border_style="#191b1f"
+    )
+
+    return nanogames_panel
 
 
 def generate_threads_panel(processes: [Process], progress_objects: [Progress]) -> Panel:
@@ -269,10 +288,57 @@ def get_latest_hash_from_ethercrash(tries=3) -> string:
                 raise
 
 
+def get_latest_hash_from_nanogames(tries=3) -> string:
+    """Attempt to find the latest hash from nanogames.io.
+       Be careful not to run this too often as to prevent ip block.
+    """
+    for i in range(tries):
+        try:
+            selenium_options = Options()
+            selenium_options.headless = True
+            selenium_options.add_argument('--no-sandbox')
+            selenium_options.add_argument('--disable-dev-shm-usage')
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=selenium_options)
+            driver.get('https://nanogames.io/crash')
+
+            waiter = WebDriverWait(driver, 20)
+            # redirect back to /crash
+            time.sleep(2)
+            if driver.current_url.endswith("/spin"):
+                driver.get('https://nanogames.io/crash')
+
+            history_tab = waiter.until(
+                expected_conditions.visibility_of_element_located((
+                    By.XPATH, "//button[text()='History']")))
+            history_tab.click()
+            driver.execute_script("arguments[0].scrollIntoView();", history_tab)
+
+            history_table = waiter.until(
+                expected_conditions.visibility_of_element_located((
+                    By.XPATH, "//*[@id=\"game-crash\"]/div[3]/div[2]/div/div[2]/table")))
+            first_row_columns = history_table.find_element(By.CSS_SELECTOR, "tbody > tr:first-child").find_elements(By.TAG_NAME, "td")
+
+            latest_hash_from_site = first_row_columns[2].find_element(By.TAG_NAME, "input").get_attribute('value')
+            bang_multiplier = first_row_columns[1].text
+            game_number = first_row_columns[0].text
+
+            if latest_hash_from_site is not None and len(latest_hash_from_site) == 64 and \
+                    game_number is not None and str(game_number).isnumeric():
+                console.print("Successfully found hash and game number from nanogames.io", style='success')
+                return latest_hash_from_site, game_number, bang_multiplier
+            else:
+                raise Exception("Failed to find hash and game number from nanogames.io")
+        except Exception as e:
+            if i < tries - 1:  # i is zero indexed
+                continue
+            else:
+                raise
+
+
 def get_latest_hashes_from_all_sites(list) -> None:
     """
         Find new latest hashes and game numbers from each website and return list
-        [hash1, gamenumber1, bust, hash2, gamenumber2, crash]
+        [hash1, gamenumber1, bust, hash2, gamenumber2, crash, hash3, gamenumber3, etc...]
     """
     # bustabit
     original = latest_terminating_hashes[0]
@@ -289,6 +355,15 @@ def get_latest_hashes_from_all_sites(list) -> None:
         list[3] = ethercrash_hash
         list[4] = ethercrash_game_number
         list[5] = crash
+
+    # nanogmaes
+    original = latest_terminating_hashes[2]
+    nanogames_hash, nanogames_game_number, bang = get_latest_hash_from_nanogames(5)
+    if original != nanogames_hash:
+        list[6] = nanogames_hash
+        list[7] = nanogames_game_number
+        list[8] = bang
+
     update_sha_iterations_per_hash()
 
 
@@ -296,7 +371,8 @@ def update_sha_iterations_per_hash():
     global sha_iterations_per_hash
     bustabit_games_left = 10000000 - int(latest_game_number[0])
     ethercrash_games_left = 10000000 - int(latest_game_number[1])
-    sha_iterations_per_hash = max(bustabit_games_left, ethercrash_games_left)
+    nanogames_games_left = 10000000 - int(latest_game_number[2])
+    sha_iterations_per_hash = median([bustabit_games_left, ethercrash_games_left, nanogames_games_left])
 
 
 def temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS):
@@ -327,6 +403,10 @@ def execute():
     latest_terminating_hashes[1] = ethercrash_hash
     latest_game_number[1] = ethercrash_game_number
     latest_game_multiplier[1] = crash
+    # nanogames_hash, nanogames_game_number, bang = get_latest_hash_from_nanogames(5)
+    latest_terminating_hashes[2] = "ba0da0947aec84b4272791a38de708de915fb63a042dd9b985cafd6f21614418"#nanogames_hash
+    latest_game_number[2] = 9000000#nanogames_game_number
+    latest_game_multiplier[2] = 4.57#bang
     update_sha_iterations_per_hash()
 
     console.log("latest_terminating_hashes: %s" % latest_terminating_hashes)
@@ -355,7 +435,7 @@ def execute():
     grid.add_column(justify="center", ratio=1)
     grid.add_column(justify="right")
     grid.add_row(
-        "[b]Jay-Ar's[/b] Bustabit Hash Cracker Application (Terminal program)",
+        "[b]Jay-Ar's[/b] sha256 Hash Cracker Terminal Application",
         "Start Date: " + datetime.now().ctime(),
     )
 
@@ -364,10 +444,11 @@ def execute():
     layout["stats"].update(generate_stats_panel("0"))
     layout["section1"].update(generate_bustabit_panel())
     layout["section2"].update(generate_ethercrash_panel())
+    layout["section3"].update(generate_nanogames_panel())
     layout["threads"].update(generate_threads_panel(processes, progress_objects))
     hashes_checked = 0
     continue_loop = True
-    return_list = ['', '', '', '', '', '']
+    return_list = ['', '', '', '', '', '', '', '', '']
     webdriver_thread = threading.Thread(target=get_latest_hashes_from_all_sites, args=[return_list])
     webdriver_thread_started = False
     winner_found = False
@@ -392,6 +473,8 @@ def execute():
                         # ethercrash
                         elif winner_index == 1:
                             layout["section2"].update(generate_ethercrash_panel(winning_hash))
+                        elif winner_index == 2:
+                            layout["section3"].update(generate_nanogames_panel(winning_hash))
                         console.save_html("output_winner.html")
                         # Kill all Processes
                         for p in processes:
@@ -438,7 +521,7 @@ def execute():
 
             # Grab the latest terminating hash from each website every x minutes
             elapsed_seconds = time.time() - start_time_2
-            if elapsed_seconds / 60 >= 2:
+            if elapsed_seconds / 60 >= 2.5:
                 if not winner_found and not webdriver_thread_started and not webdriver_thread.is_alive():
                     webdriver_thread.start()
                     webdriver_thread_started = True
@@ -453,10 +536,14 @@ def execute():
                 latest_terminating_hashes[1] = return_list[3]
                 latest_game_number[1] = return_list[4]
                 latest_game_multiplier[1] = return_list[5]
+                # latest_terminating_hashes[2] = return_list[6]
+                # latest_game_number[2] = return_list[7]
+                # latest_game_multiplier[2] = return_list[8]
                 webdriver_thread = threading.Thread(target=get_latest_hashes_from_all_sites,
                                                     args=[return_list])
                 layout["section1"].update(generate_bustabit_panel())
                 layout["section2"].update(generate_ethercrash_panel())
+                layout["section3"].update(generate_nanogames_panel())
                 webdriver_thread_started = False
 
 
