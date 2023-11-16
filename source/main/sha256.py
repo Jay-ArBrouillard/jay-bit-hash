@@ -403,10 +403,10 @@ def execute():
     latest_terminating_hashes[1] = ethercrash_hash
     latest_game_number[1] = ethercrash_game_number
     latest_game_multiplier[1] = crash
-    # nanogames_hash, nanogames_game_number, bang = get_latest_hash_from_nanogames(5)
-    latest_terminating_hashes[2] = "ba0da0947aec84b4272791a38de708de915fb63a042dd9b985cafd6f21614418"#nanogames_hash
-    latest_game_number[2] = 9000000#nanogames_game_number
-    latest_game_multiplier[2] = 4.57#bang
+    nanogames_hash, nanogames_game_number, bang = get_latest_hash_from_nanogames(5)
+    latest_terminating_hashes[2] = nanogames_hash
+    latest_game_number[2] = nanogames_game_number
+    latest_game_multiplier[2] = bang
     update_sha_iterations_per_hash()
 
     console.log("latest_terminating_hashes: %s" % latest_terminating_hashes)
@@ -536,9 +536,9 @@ def execute():
                 latest_terminating_hashes[1] = return_list[3]
                 latest_game_number[1] = return_list[4]
                 latest_game_multiplier[1] = return_list[5]
-                # latest_terminating_hashes[2] = return_list[6]
-                # latest_game_number[2] = return_list[7]
-                # latest_game_multiplier[2] = return_list[8]
+                latest_terminating_hashes[2] = return_list[6]
+                latest_game_number[2] = return_list[7]
+                latest_game_multiplier[2] = return_list[8]
                 webdriver_thread = threading.Thread(target=get_latest_hashes_from_all_sites,
                                                     args=[return_list])
                 layout["section1"].update(generate_bustabit_panel())
