@@ -144,7 +144,7 @@ def generate_nanogames_panel(winning_hash=None) -> Panel:
         nanogames_table,
         box=box.ROUNDED,
         title="nanogames",
-        border_style="#191b1f"
+        border_style="#31343c"
     )
 
     return nanogames_panel

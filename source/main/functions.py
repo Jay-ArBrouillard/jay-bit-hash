@@ -1,4 +1,7 @@
+import binascii
 import hashlib
+import hmac
+import math
 
 shared_array_chunk_size = 4
 
@@ -37,3 +40,53 @@ def median(lst):
     if remainder:
         return sorted(lst)[quotient]
     return sum(sorted(lst)[quotient - 1:quotient + 1]) / 2
+
+
+def divisible(hash, mod):
+    val = 0
+    o = len(hash) % 4
+
+    initial = o - 4 if 0 > 0 else 0
+    for i in range(initial, len(hash), 4):
+        val = ((val << 16) + int(hash[i:i + 4], 16)) % mod
+    return val == 0
+
+
+def calculate_bustabit_result(hash) -> None:
+    salt = b"0000000000000000004d6ec16dafe9d8370958664c1dc422f452892264c59526"
+    hashobj = hmac.new(salt, binascii.unhexlify(hash), hashlib.sha256)
+
+    number = 0.0
+    intversion = int(
+        hashobj.hexdigest()[0: int(52 / 4)], 16
+    )  # parseInt(hash.slice(0,52/4),16);
+    X = 99 / (1 - (intversion / (2 ** 52)))  # Math.pow(2,52);
+    number = max(1, math.floor(X) / 100)
+    return number
+
+
+def calculate_nanogames_result(hash) -> None:
+    salt = b"0000000000000000000fd438478cd50a858def3b606d43dfe12a22144f3a5f1b"
+    hashobj = hmac.new(salt, binascii.unhexlify(hash), hashlib.sha256)
+
+    intversion = int(
+        hashobj.hexdigest()[0: int(52 / 4)], 16
+    )  # parseInt(hash.slice(0,52/4),16);
+    X = 99 / (1 - (intversion / (2 ** 52)))  # Math.pow(2,52);
+    number = max(1, math.floor(X) / 100)
+    return number
+
+
+def calculate_ethercrash_result(hash) -> None:
+    salt = "0xd8b8a187d5865a733680b4bf4d612afec9c6829285d77f438cd70695fb946801"
+    hashobj = hmac.new(str.encode(hash), b"", hashlib.sha256)
+    hashobj.update(salt.encode("utf-8"))
+    h = hashobj.hexdigest()
+
+    if divisible(h, 101):
+        return 0
+
+    h = int(h[0:int(52/4)], 16)
+    e = pow(2, 52)
+
+    return math.floor((100 * e - h) / (e - h)) / 100
