@@ -298,6 +298,7 @@ def get_latest_hash_from_nanogames(tries=3) -> string:
             selenium_options.headless = True
             selenium_options.add_argument('--no-sandbox')
             selenium_options.add_argument('--disable-dev-shm-usage')
+            selenium_options.add_argument("--disable-blink-features=AutomationControlled")
             driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=selenium_options)
             driver.get('https://nanogames.io/crash')
 
