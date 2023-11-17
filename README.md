@@ -4,6 +4,7 @@ jay-bit-hash is a terminal based, Python application attempting to crack future 
 
 Please keep in mind that running this application in no way is a guarantee of winning. In fact, the chance of finding a winning hash is equal to: 2^256 / the number of games left in the chain (< 2 million for bustabit). I would like to think of it as more of a proof of concept with the possibility of winning the jackpot. This is your warning not to fry your computer running this application.  
 
+![terminal.gif](https://github.com/Jay-ArBrouillard/jay-bit-hash/blob/master/blur.gif)
 ![terminal.PNG](https://github.com/Jay-ArBrouillard/jay-bit-hash/blob/master/terminal.PNG)
 ![terminal.gif](https://github.com/Jay-ArBrouillard/jay-bit-hash/blob/master/terminal.gif)
 
