@@ -365,8 +365,6 @@ def get_latest_hashes_from_all_sites(list) -> None:
         list[7] = nanogames_game_number
         list[8] = bang
 
-    update_sha_iterations_per_hash()
-
 
 def update_sha_iterations_per_hash():
     global sha_iterations_per_hash
@@ -527,6 +525,7 @@ def execute():
                 latest_game_multiplier[2] = return_list[8]
                 webdriver_thread = threading.Thread(target=get_latest_hashes_from_all_sites,
                                                     args=[return_list])
+                update_sha_iterations_per_hash()
                 layout["section1"].update(generate_bustabit_panel())
                 layout["section2"].update(generate_ethercrash_panel())
                 layout["section3"].update(generate_nanogames_panel())
