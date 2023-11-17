@@ -372,29 +372,13 @@ def update_sha_iterations_per_hash():
     bustabit_games_left = 10000000 - int(latest_game_number[0])
     ethercrash_games_left = 10000000 - int(latest_game_number[1])
     nanogames_games_left = 10000000 - int(latest_game_number[2])
-    sha_iterations_per_hash = median([bustabit_games_left, ethercrash_games_left, nanogames_games_left])
-
-
-def temp(LATEST_TERMINATING_HASH, MAX_ITERATIONS):
-    m = hashlib.sha256()
-    # m.update(str.encode(random_hash))
-    m.update(str.encode(LATEST_TERMINATING_HASH))
-    hex_digest = m.hexdigest()
-
-    for _ in range(MAX_ITERATIONS + 1):
-        m = hashlib.sha256()
-        m.update(str.encode(hex_digest))
-        hex_digest = m.hexdigest()
-        if hex_digest == "f9f628b794c374558d6923fee19b71ed43e924414a5e4eced3a780fe12970495":
-            stop = "s"
-            print("success")
-            break
+    sha_iterations_per_hash = min([bustabit_games_left, ethercrash_games_left, nanogames_games_left])
 
 
 def execute():
     global start_time_2
     processes = []
-    # index 0 is bustabit, index 1 is ethercrash
+    # index 0 is bustabit, index 1 is ethercrash, index 2 is nanogames
     bustabit_hash, bustabit_game_number, bust = get_latest_hash_from_bustabit(5)
     latest_terminating_hashes[0] = bustabit_hash
     latest_game_number[0] = bustabit_game_number
@@ -473,6 +457,7 @@ def execute():
                         # ethercrash
                         elif winner_index == 1:
                             layout["section2"].update(generate_ethercrash_panel(winning_hash))
+                        # nanogames
                         elif winner_index == 2:
                             layout["section3"].update(generate_nanogames_panel(winning_hash))
                         console.save_html("output_winner.html")
