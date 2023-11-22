@@ -1,4 +1,3 @@
-import hashlib
 import multiprocessing.managers
 import os
 import random
@@ -27,15 +26,15 @@ from selenium.webdriver.support.wait import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
 # Global Variables #
-from source.main.functions import calculate_hash, median
+from source.main.functions import calculate_hash
 
 console = Console(record=True, theme=Theme({'success': 'green', 'error': 'bold red', 'init': 'yellow'}))
 start_time = time.time()
 start_time_2 = time.time()
 shared_array_chunk_size = 4
-latest_terminating_hashes = ['', '', '']
-latest_game_number = [1, 1, 1]
-latest_game_multiplier = ['', '', '']
+latest_terminating_hashes = ['', '', '14a5c73b736ed13cabdeeb9bea454a2502c204e3d19e87d9a5955d23ba3daf1e']
+latest_game_number = [1, 1, 5843793]
+latest_game_multiplier = ['', '', '4.44']
 sha_iterations_per_hash = 86400
 
 
@@ -386,10 +385,10 @@ def execute():
     latest_terminating_hashes[1] = ethercrash_hash
     latest_game_number[1] = ethercrash_game_number
     latest_game_multiplier[1] = crash
-    nanogames_hash, nanogames_game_number, bang = get_latest_hash_from_nanogames(5)
-    latest_terminating_hashes[2] = nanogames_hash
-    latest_game_number[2] = nanogames_game_number
-    latest_game_multiplier[2] = bang
+    # nanogames_hash, nanogames_game_number, bang = get_latest_hash_from_nanogames(5)
+    # latest_terminating_hashes[2] = nanogames_hash
+    # latest_game_number[2] = nanogames_game_number
+    # latest_game_multiplier[2] = bang
     update_sha_iterations_per_hash()
 
     console.log("latest_terminating_hashes: %s" % latest_terminating_hashes)
@@ -398,7 +397,6 @@ def execute():
     shared_array = multiprocessing.Array('i', cpu_count * shared_array_chunk_size)
     # Progress object is the status bar for each thread
     progress_objects: [Progress] = []
-    progress_task_ids = []
 
     for i in track(range(cpu_count), description="Register and Start Processes..."):
         random_hash = ''.join(random.SystemRandom().choice('abcdef' + string.digits) for _ in range(64))
@@ -406,9 +404,8 @@ def execute():
             *Progress.get_default_columns(),
             MofNCompleteColumn()
         )
-        task_id = progress_object.add_task(description=random_hash, total=sha_iterations_per_hash)
+        progress_object.add_task(description=random_hash, total=sha_iterations_per_hash)
         progress_objects.append(progress_object)
-        progress_task_ids.append(task_id)
         processes.append(Process(target=calculate_hash,
                                  args=(
                                      latest_terminating_hashes, sha_iterations_per_hash, random_hash, i, shared_array)))
