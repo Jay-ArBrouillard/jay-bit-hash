@@ -462,8 +462,7 @@ def execute():
                             p.kill()
                         # Complete all Tasks
                         for p in progress_objects:
-                            task_id = p.tasks[0].id
-                            p.update(task_id, completed=True)
+                            p.update(p.tasks[0].id, completed=True)
                     elif not winner_found:  # loser
                         # If a winner has not been found then,
                         # Start up a new process with a new random hash
@@ -476,7 +475,7 @@ def execute():
                                                                random_hash,
                                                                process_idx, shared_array))
                         processes[process_idx].start()
-                        progress.reset(task_id=task_id, description=random_hash, total=sha_iterations_per_hash)
+                        progress.reset(task_id=task.id, description=random_hash, total=sha_iterations_per_hash)
 
                     iterations_list[process_idx] = 0.0
                     hashes_checked += 1
