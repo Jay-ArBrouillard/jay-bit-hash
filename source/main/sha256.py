@@ -489,7 +489,7 @@ def execute():
                     # the progress bar
                     if task.completed + delta >= task.total:
                         random_hash = ''.join(random.SystemRandom().choice('abcdef' + string.digits) for _ in range(64))
-                        progress.reset(task_id=task_id, description=random_hash, total=sha_iterations_per_hash)
+                        progress.reset(task_id=task.id, description=random_hash, total=sha_iterations_per_hash)
                         iterations_list[process_idx] = 0.0
                     else:
                         progress.update(task_id=task.id, advance=delta)
