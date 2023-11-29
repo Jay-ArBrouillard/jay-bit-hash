@@ -26,7 +26,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
 # Global Variables #
-from source.main.functions import calculate_hash
+from source.main.functions import calculate_hash, email_and_text_myself
 
 console = Console(record=True, theme=Theme({'success': 'green', 'error': 'bold red', 'init': 'yellow'}))
 start_time = time.time()
@@ -447,22 +447,31 @@ def execute():
                         winning_hash = task.description
                         console.log(f"WINNER, WINNER CHICKEN DINNER: {winning_hash}")
                         winner_found = True
+                        winning_site = "unknown"
                         # bustabit
                         if winner_index == 0:
                             layout["section1"].update(generate_bustabit_panel(winning_hash))
+                            winning_site = "bustabit.com"
                         # ethercrash
                         elif winner_index == 1:
                             layout["section2"].update(generate_ethercrash_panel(winning_hash))
+                            winning_site = "ethercrash.io"
                         # nanogames
                         elif winner_index == 2:
                             layout["section3"].update(generate_nanogames_panel(winning_hash))
+                            winning_site = "nanogames.io"
                         console.save_html("output_winner.html")
+                        # Send email and text message
+                        email_and_text_myself(f"WINNER on {winning_site}", winning_hash)
                         # Kill all Processes
                         for p in processes:
                             p.kill()
+                        processes.clear()
                         # Complete all Tasks
                         for p in progress_objects:
                             p.update(p.tasks[0].id, completed=True)
+                        continue_loop = False
+                        break
                     elif not winner_found:  # loser
                         # If a winner has not been found then,
                         # Start up a new process with a new random hash

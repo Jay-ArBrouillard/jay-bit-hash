@@ -2,6 +2,10 @@ import binascii
 import hashlib
 import hmac
 import math
+import smtplib
+from email.message import EmailMessage
+
+from source.main import creds
 
 shared_array_chunk_size = 4
 
@@ -33,6 +37,28 @@ def calculate_hash(latest_terminating_hashes, max_iterations, hash_in_decimal, i
         hex_digest = m.hexdigest()
 
     shared_array[shared_array_chunk_size * index_in_array + 2] = 1
+
+
+def email_alert(subject, body, to):
+    msg = EmailMessage()
+    msg.set_content(body)
+    msg['subject'] = subject
+    msg['to'] = to
+
+    user = creds.user
+    msg['from'] = user
+    password = creds.password
+
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.starttls()
+    server.login(user, password)
+    server.send_message(msg)
+    server.quit()
+
+
+def email_and_text_myself(subject, body):
+    email_alert(subject, body, creds.to_email)
+    email_alert(subject, body, creds.to_phone_number)
 
 
 def median(lst):
