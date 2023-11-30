@@ -367,6 +367,13 @@ def get_latest_hashes_from_all_sites(list) -> None:
 
 def update_sha_iterations_per_hash():
     global sha_iterations_per_hash
+    if latest_game_number[0] is None or not str(latest_game_number[0]).isnumeric():
+        return
+    if latest_game_number[1] is None or not str(latest_game_number[1]).isnumeric():
+        return
+    if latest_game_number[2] is None or not str(latest_game_number[2]).isnumeric():
+        return
+
     bustabit_games_left = 10000000 - int(latest_game_number[0])
     ethercrash_games_left = 10000000 - int(latest_game_number[1])
     nanogames_games_left = 10000000 - int(latest_game_number[2])
