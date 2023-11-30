@@ -433,7 +433,7 @@ def execute():
     webdriver_thread_started = False
     winner_found = False
     iterations_list = [0.0] * len(processes)  # Store the last retrieve iteration for each process
-    with Live(layout, refresh_per_second=4, screen=True):
+    with Live(layout, refresh_per_second=1, screen=True):
         while continue_loop:
             for process_idx, process in enumerate(processes):
                 progress = progress_objects[process_idx]
@@ -535,6 +535,7 @@ def execute():
                 layout["section2"].update(generate_ethercrash_panel())
                 layout["section3"].update(generate_nanogames_panel())
                 webdriver_thread_started = False
+            time.sleep(1)
 
 
 if __name__ == '__main__':
