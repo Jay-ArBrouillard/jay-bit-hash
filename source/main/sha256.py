@@ -343,7 +343,7 @@ def get_latest_hashes_from_all_sites(list) -> None:
     # bustabit
     original = latest_terminating_hashes[0]
     bustabit_hash, bustabit_game_number, bust = get_latest_hash_from_bustabit(5)
-    if original != bustabit_hash:
+    if bustabit_hash and len(bustabit_hash) == 64 and original != bustabit_hash:
         list[0] = bustabit_hash
         list[1] = bustabit_game_number
         list[2] = bust
@@ -351,15 +351,15 @@ def get_latest_hashes_from_all_sites(list) -> None:
     # ethercrash
     original = latest_terminating_hashes[1]
     ethercrash_hash, ethercrash_game_number, crash = get_latest_hash_from_ethercrash(5)
-    if original != ethercrash_hash:
+    if ethercrash_hash and len(ethercrash_hash) == 64 and original != ethercrash_hash:
         list[3] = ethercrash_hash
         list[4] = ethercrash_game_number
         list[5] = crash
 
-    # nanogmaes
+    # nanogames
     original = latest_terminating_hashes[2]
     nanogames_hash, nanogames_game_number, bang = get_latest_hash_from_nanogames(5)
-    if original != nanogames_hash:
+    if nanogames_hash and len(nanogames_hash) == 64 and original != nanogames_hash:
         list[6] = nanogames_hash
         list[7] = nanogames_game_number
         list[8] = bang
