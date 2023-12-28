@@ -32,9 +32,9 @@ console = Console(record=True, theme=Theme({'success': 'green', 'error': 'bold r
 start_time = time.time()
 start_time_2 = time.time()
 shared_array_chunk_size = 4
-latest_terminating_hashes = ['', '', '14a5c73b736ed13cabdeeb9bea454a2502c204e3d19e87d9a5955d23ba3daf1e']
-latest_game_number = [1, 1, 5843793]
-latest_game_multiplier = ['', '', '4.44']
+latest_terminating_hashes = ['', 'a5b5fec54f4faf7132c1af0757211cf43235e7e41ed9f1b300fb54e3daf467b2', '639c722e22092eb49f0be900dc3473457064a2c31ddec0930ee8515b73371d0b']
+latest_game_number = [1, 6779238, 5978692]
+latest_game_multiplier = ['', '27.35', '2.0.4']
 sha_iterations_per_hash = 86400
 
 
@@ -340,9 +340,20 @@ def get_latest_hashes_from_all_sites(list) -> None:
         Find new latest hashes and game numbers from each website and return list
         [hash1, gamenumber1, bust, hash2, gamenumber2, crash, hash3, gamenumber3, etc...]
     """
+    # initialize return list
+    list[0] = latest_terminating_hashes[0]
+    list[1] = latest_game_number[0]
+    list[2] = latest_game_multiplier[0]
+    list[3] = latest_terminating_hashes[1]
+    list[4] = latest_game_number[1]
+    list[5] = latest_game_multiplier[1]
+    list[6] = latest_terminating_hashes[2]
+    list[7] = latest_game_number[2]
+    list[8] = latest_game_multiplier[2]
+
     # bustabit
     original = latest_terminating_hashes[0]
-    bustabit_hash, bustabit_game_number, bust = get_latest_hash_from_bustabit(5)
+    bustabit_hash, bustabit_game_number, bust = get_latest_hash_from_bustabit(3)
     if bustabit_hash and len(bustabit_hash) == 64 and original != bustabit_hash:
         list[0] = bustabit_hash
         list[1] = bustabit_game_number
@@ -350,7 +361,7 @@ def get_latest_hashes_from_all_sites(list) -> None:
 
     # ethercrash
     original = latest_terminating_hashes[1]
-    ethercrash_hash, ethercrash_game_number, crash = get_latest_hash_from_ethercrash(5)
+    ethercrash_hash, ethercrash_game_number, crash = get_latest_hash_from_ethercrash(3)
     if ethercrash_hash and len(ethercrash_hash) == 64 and original != ethercrash_hash:
         list[3] = ethercrash_hash
         list[4] = ethercrash_game_number
@@ -358,7 +369,7 @@ def get_latest_hashes_from_all_sites(list) -> None:
 
     # nanogames
     original = latest_terminating_hashes[2]
-    nanogames_hash, nanogames_game_number, bang = get_latest_hash_from_nanogames(5)
+    nanogames_hash, nanogames_game_number, bang = get_latest_hash_from_nanogames(3)
     if nanogames_hash and len(nanogames_hash) == 64 and original != nanogames_hash:
         list[6] = nanogames_hash
         list[7] = nanogames_game_number
@@ -388,10 +399,10 @@ def execute():
     latest_terminating_hashes[0] = bustabit_hash
     latest_game_number[0] = bustabit_game_number
     latest_game_multiplier[0] = bust
-    ethercrash_hash, ethercrash_game_number, crash = get_latest_hash_from_ethercrash(5)
-    latest_terminating_hashes[1] = ethercrash_hash
-    latest_game_number[1] = ethercrash_game_number
-    latest_game_multiplier[1] = crash
+    # ethercrash_hash, ethercrash_game_number, crash = get_latest_hash_from_ethercrash(5)
+    # latest_terminating_hashes[1] = ethercrash_hash
+    # latest_game_number[1] = ethercrash_game_number
+    # latest_game_multiplier[1] = crash
     # nanogames_hash, nanogames_game_number, bang = get_latest_hash_from_nanogames(5)
     # latest_terminating_hashes[2] = nanogames_hash
     # latest_game_number[2] = nanogames_game_number
