@@ -34,7 +34,7 @@ start_time_2 = time.time()
 shared_array_chunk_size = 4
 latest_terminating_hashes = ['', 'a5b5fec54f4faf7132c1af0757211cf43235e7e41ed9f1b300fb54e3daf467b2', '639c722e22092eb49f0be900dc3473457064a2c31ddec0930ee8515b73371d0b']
 latest_game_number = [1, 6779238, 5978692]
-latest_game_multiplier = ['', '27.35', '2.0.4']
+latest_game_multiplier = ['', '27.35', '2.04']
 sha_iterations_per_hash = 86400
 
 
