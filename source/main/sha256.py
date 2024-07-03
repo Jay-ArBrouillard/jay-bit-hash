@@ -32,9 +32,9 @@ console = Console(record=True, theme=Theme({'success': 'green', 'error': 'bold r
 start_time = time.time()
 start_time_2 = time.time()
 shared_array_chunk_size = 4
-latest_terminating_hashes = ['', 'a5b5fec54f4faf7132c1af0757211cf43235e7e41ed9f1b300fb54e3daf467b2', '639c722e22092eb49f0be900dc3473457064a2c31ddec0930ee8515b73371d0b']
-latest_game_number = [1, 6779238, 5978692]
-latest_game_multiplier = ['', '27.35', '2.04']
+latest_terminating_hashes = ['', '7a80fca32d01423ca77965dd08a1feb0f8082fe555aa0f55f8cd62c3f3d13504', '9d47891271557e9b2fd68449f37cc2c838e14cf4f1134de331598bf500fa91a5']
+latest_game_number = [1, 7427082, 6576399]
+latest_game_multiplier = ['', '1.22', '1.6']
 sha_iterations_per_hash = 86400
 
 
@@ -451,7 +451,7 @@ def execute():
     webdriver_thread_started = False
     winner_found = False
     iterations_list = [0.0] * len(processes)  # Store the last retrieve iteration for each process
-    with Live(layout, refresh_per_second=1, screen=True):
+    with Live(layout, refresh_per_second=4, screen=True):
         while continue_loop:
             for process_idx, process in enumerate(processes):
                 progress = progress_objects[process_idx]
